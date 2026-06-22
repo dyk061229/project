@@ -294,6 +294,13 @@ if menu == "이슈 조회":
                     .value_counts()
                     .head(5)
                 )
+                fail_counts.index = fail_counts.index.map(
+                    lambda x: {
+                        "터치 미인식": "No Touch",
+                        "기타": "ETC",
+                        "참고사항": "Remark"
+                    }.get(x, x)
+                )
                 
                 fig, ax = plt.subplots(figsize=(2.3, 2.3))
                 fig.patch.set_alpha(0)
@@ -311,7 +318,7 @@ if menu == "이슈 조회":
                     wedgeprops={"width": 0.42, "edgecolor": "#111827", "linewidth": 2},
                     textprops={
                         "color": "white",
-                        "fontsize": 7,
+                        "fontsize": 6.5,
                         "fontweight": "bold"
                     }
                 )
