@@ -347,7 +347,7 @@ if menu == "이슈 조회":
                         st.info("삭제를 취소했습니다.")
                         st.rerun()
 
-        excel_data = to_excel(display_df)
+        excel_data = to_excel(filtered_df)
 
         st.download_button(
         "전체 이슈 Excel 다운로드",
