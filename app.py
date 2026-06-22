@@ -132,48 +132,51 @@ menu = st.radio(
 
 if menu == "이슈 등록":
     st.subheader("이슈 등록")
-        
-    col1, col2, col3 = st.columns([1,1,1])
-    
-    with col1:
-        panel_id = st.text_input("Panel ID / Code *")
-    
-    with col2:
-        ic = st.text_input("IC")
-    
-    with col3:
-        model = st.text_input("Model")
-    
-    col4, col5 = st.columns([1,1])
-    
-    with col4:
-        build = st.text_input("FW Version *")
-    
-    with col5:
-        test_item = st.selectbox(
-            "Test Item",
-            ["Drawing", "Ghost", "Jitter", "Palm", "Line Broken"]
+
+    with st.form("issue_register_form", clear_on_submit=True):
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            panel_id = st.text_input("Panel ID / Code *")
+
+        with col2:
+            ic = st.text_input("IC")
+
+        with col3:
+            model = st.text_input("Model")
+
+        col4, col5 = st.columns(2)
+
+        with col4:
+            build = st.text_input("FW Version *")
+
+        with col5:
+            test_item = st.selectbox(
+                "Test Item",
+                ["Drawing", "Jitter", "Ghost", "Line Broken", "Palm", "Edge", "Multi", "WHLK", "CS", "ODM", "ETC"]
+            )
+
+        fail_type_list = st.multiselect(
+            "Fail Type *",
+            FAIL_TYPES,
+            placeholder="Fail Type을 선택해주세요. 중복 선택 가능"
         )
-    
-    fail_type = st.multiselect(
-        "Fail Type *",
-        FAIL_TYPES
-    )
-    
-    issue_detail = st.text_area(
-        "상세 이슈 내용",
-        height=150
-    )
 
-    submitted = st.button("이슈 등록")
+        issue_detail = st.text_area(
+            "상세 이슈 내용",
+            placeholder="예: 특정 구간에서 Line broken 발생 / 비교 FW 대비 Jitter 증가 / 재현 조건 등",
+            height=160
+        )
 
-    if submitted:
-        if not panel_id or not build or not fail_type:
-            st.warning("Panel ID / FW Version / Fail Type은 필수 입력 항목입니다.")
-        else:
-            fail_type = ", ".join(fail_type)
-            insert_issue(panel_id, ic, model, build, test_item, fail_type, issue_detail)
-            st.success("이슈 등록이 완료되었습니다.")
+        submitted = st.form_submit_button("이슈 등록")
+
+        if submitted:
+            if not panel_id or not build or not fail_type_list:
+                st.warning("Panel ID / FW Version / Fail Type은 필수 입력 항목입니다.")
+            else:
+                fail_type = ", ".join(fail_type_list)
+                insert_issue(panel_id, ic, model, build, test_item, fail_type, issue_detail)
+                st.success("이슈 등록이 완료되었습니다.")
 
 
 if menu == "이슈 조회":
@@ -200,7 +203,7 @@ if menu == "이슈 조회":
     with col5:
         test_item_search = st.selectbox(
             "Test Item",
-            ["전체", "Drawing", "Palm", "Edge", "Multi", "WHLK", "CS", "ODM", "ETC"]
+            ["전체", "Drawing", "Jitter", "Ghost", "Line Broken", "Palm", "Edge", "Multi", "WHLK", "CS", "ODM", "ETC"]
         )
 
     fail_filter = st.multiselect(
@@ -345,28 +348,28 @@ if menu == "이슈 조회":
                         st.rerun()
 
         
-        excel_df = filtered_df.rename(columns={
-            "date": "Date",
-            "panel_id": "Panel ID",
-            "ic": "IC",
-            "model": "Model",
-            "build": "FW Version",
-            "test_item": "Test Item",
-            "fail_type": "Fail Type",
-            "issue_detail": "Issue Detail"
-        })
-
-        excel_df.drop(columns=["id"], inplace=True, errors="ignore")
-        excel_df.insert(0, "No", range(1, len(excel_df) + 1))
-
-        excel_data = to_excel(excel_df)
-
-        st.download_button(
-            "전체 이슈 Excel 다운로드",
-            excel_data,
-            file_name=f"Issue_Report_{date.today()}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+            excel_df = filtered_df.rename(columns={
+                "date": "Date",
+                "panel_id": "Panel ID",
+                "ic": "IC",
+                "model": "Model",
+                "build": "FW Version",
+                "test_item": "Test Item",
+                "fail_type": "Fail Type",
+                "issue_detail": "Issue Detail"
+            })
+            
+            excel_df.drop(columns=["id"], inplace=True, errors="ignore")
+            excel_df.insert(0, "No", range(1, len(excel_df) + 1))
+            
+            excel_data = to_excel(excel_df)
+            
+            st.download_button(
+                "전체 이슈 Excel 다운로드",
+                excel_data,
+                file_name=f"Issue_Report_{date.today()}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
     else:
         st.caption("조회 조건을 입력한 뒤 [조회] 버튼을 눌러주세요.")
