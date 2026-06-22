@@ -10,6 +10,26 @@ st.set_page_config(
     layout="wide"
 )
 
+st.markdown("""
+<style>
+div[data-testid="stForm"] {
+    max-width: 700px;
+}
+
+div[data-testid="stTextInput"] {
+    max-width: 700px;
+}
+
+div[data-testid="stSelectbox"] {
+    max-width: 700px;
+}
+
+div[data-testid="stMultiSelect"] {
+    max-width: 700px;
+}
+</style>
+""", unsafe_allow_html=True)
+
 DB_NAME = "sqa_issue.db"
 
 FAIL_TYPES = [
@@ -20,6 +40,13 @@ FAIL_TYPES = [
     "터치 미인식",
     "기타",
     "참고사항"
+]
+
+IC_LIST = [
+    "GT9110",
+    "R4500",
+    "C4500",
+    "T1590A"
 ]
 
 def get_connection():
@@ -134,27 +161,15 @@ if menu == "이슈 등록":
     st.subheader("이슈 등록")
 
     with st.form("issue_register_form", clear_on_submit=True):
-        col1, col2, col3 = st.columns(3)
+        panel_id = st.text_input("Panel ID / Code *", max_chars=50)
+        ic = st.selectbox("IC", IC_LIST)
+        model = st.text_input("Model", max_chars=50)
+        build = st.text_input("FW Version *", max_chars=50)
 
-        with col1:
-            panel_id = st.text_input("Panel ID / Code *")
-
-        with col2:
-            ic = st.text_input("IC")
-
-        with col3:
-            model = st.text_input("Model")
-
-        col4, col5 = st.columns(2)
-
-        with col4:
-            build = st.text_input("FW Version *")
-
-        with col5:
-            test_item = st.selectbox(
-                "Test Item",
-                ["Drawing", "Jitter", "Ghost", "Line Broken", "Palm", "Edge", "Multi", "WHLK", "CS", "ODM", "ETC"]
-            )
+        test_item = st.selectbox(
+            "Test Item",
+            ["Drawing", "Jitter", "Ghost", "Line Broken", "Palm", "Edge", "Multi", "WHLK", "CS", "ODM", "ETC"]
+        )
 
         fail_type_list = st.multiselect(
             "Fail Type *",
@@ -165,7 +180,7 @@ if menu == "이슈 등록":
         issue_detail = st.text_area(
             "상세 이슈 내용",
             placeholder="예: 특정 구간에서 Line broken 발생 / 비교 FW 대비 Jitter 증가 / 재현 조건 등",
-            height=160
+            height=120
         )
 
         submitted = st.form_submit_button("이슈 등록")
@@ -184,27 +199,15 @@ if menu == "이슈 조회":
 
     df = load_issues()
 
-    col1, col2, col3 = st.columns(3)
+    panel_search = st.text_input("Panel ID / Code", max_chars=50)
+    ic_search = st.selectbox("IC", ["전체"] + IC_LIST)
+    model_search = st.text_input("Model", max_chars=50)
+    fw_search = st.text_input("FW Version", max_chars=50)
 
-    with col1:
-        panel_search = st.text_input("Panel ID / Code")
-
-    with col2:
-        ic_search = st.text_input("IC")
-
-    with col3:
-        model_search = st.text_input("Model")
-
-    col4, col5 = st.columns(2)
-
-    with col4:
-        fw_search = st.text_input("FW Version")
-
-    with col5:
-        test_item_search = st.selectbox(
-            "Test Item",
-            ["전체", "Drawing", "Jitter", "Ghost", "Line Broken", "Palm", "Edge", "Multi", "WHLK", "CS", "ODM", "ETC"]
-        )
+    test_item_search = st.selectbox(
+        "Test Item",
+        ["전체", "Drawing", "Jitter", "Ghost", "Line Broken", "Palm", "Edge", "Multi", "WHLK", "CS", "ODM", "ETC"]
+    )
 
     fail_filter = st.multiselect(
         "Fail Type",
@@ -230,9 +233,9 @@ if menu == "이슈 조회":
                 filtered_df["panel_id"].str.contains(panel_search, case=False, na=False)
             ]
 
-        if ic_search:
+        if ic_search != "전체":
             filtered_df = filtered_df[
-                filtered_df["ic"].str.contains(ic_search, case=False, na=False)
+              filtered_df["ic"] == ic_search
             ]
 
         if model_search:
