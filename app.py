@@ -3,6 +3,9 @@ import sqlite3
 import pandas as pd
 from datetime import date
 from io import BytesIO
+import matplotlib.pyplot as plt
+plt.rcParams["font.family"] = "Malgun Gothic"
+plt.rcParams["axes.unicode_minus"] = False
 
 st.set_page_config(
     page_title="SQA Issue Management System",
@@ -12,6 +15,12 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+            
+.chart-fixed {
+    width: 460px;
+    max-width: 460px;
+}
+
 div[data-testid="stForm"] {
     max-width: 700px;
 }
@@ -199,28 +208,29 @@ if menu == "이슈 조회":
 
     df = load_issues()
 
-    panel_search = st.text_input("Panel ID / Code", max_chars=50)
-    ic_search = st.selectbox("IC", ["전체"] + IC_LIST)
-    model_search = st.text_input("Model", max_chars=50)
-    fw_search = st.text_input("FW Version", max_chars=50)
+    left_col, right_col = st.columns([1, 0.8])
 
-    test_item_search = st.selectbox(
-        "Test Item",
-        ["전체", "Drawing", "Jitter", "Ghost", "Line Broken", "Palm", "Edge", "Multi", "WHLK", "CS", "ODM", "ETC"]
-    )
+    with left_col:
+        panel_search = st.text_input("Panel ID / Code", max_chars=50)
+        ic_search = st.selectbox("IC", ["전체"] + IC_LIST)
+        model_search = st.text_input("Model", max_chars=50)
+        fw_search = st.text_input("FW Version", max_chars=50)
 
-    fail_filter = st.multiselect(
-        "Fail Type",
-        FAIL_TYPES,
-        placeholder="Fail Type을 선택해주세요. 중복 선택 가능"
-    )
+        test_item_search = st.selectbox(
+            "Test Item",
+            ["전체", "Drawing", "Jitter", "Ghost", "Line Broken", "Palm", "Edge", "Multi", "WHLK", "CS", "ODM", "ETC"]
+        )
 
-    if st.button("조회"):
-        st.session_state["search_clicked"] = True
+        fail_filter = st.multiselect(
+            "Fail Type",
+            FAIL_TYPES,
+            placeholder="Fail Type을 선택해주세요. 중복 선택 가능"
+        )
+
+        if st.button("조회"):
+            st.session_state["search_clicked"] = True
 
     search_clicked = st.session_state.get("search_clicked", False)
-
-
 
     if df.empty:
         st.info("등록된 이슈가 없습니다.")
@@ -235,7 +245,7 @@ if menu == "이슈 조회":
 
         if ic_search != "전체":
             filtered_df = filtered_df[
-              filtered_df["ic"] == ic_search
+                filtered_df["ic"] == ic_search
             ]
 
         if model_search:
@@ -259,6 +269,47 @@ if menu == "이슈 조회":
                 filtered_df["fail_type"].str.contains(pattern, case=False, na=False)
             ]
 
+        with right_col:
+            st.markdown("### 🏆 Fail Type 순위 TOP 5")
+
+            if not filtered_df.empty:
+                fail_counts = (
+                    filtered_df["fail_type"]
+                    .str.split(", ")
+                    .explode()
+                    .value_counts()
+                    .head(5)
+                )
+                
+                fig, ax = plt.subplots(figsize=(2.3, 2.3))
+                fig.patch.set_alpha(0)
+                ax.set_facecolor("none")
+
+                colors = ["#8dd3c7", "#bebada", "#b3de69", "#fb8072", "#fdb462"]
+
+                ax.pie(
+                    fail_counts,
+                    labels=fail_counts.index,
+                    autopct="%1.1f%%",
+                    startangle=90,
+                    pctdistance=0.75,
+                    colors=colors,
+                    wedgeprops={"width": 0.42, "edgecolor": "#111827", "linewidth": 2},
+                    textprops={
+                        "color": "white",
+                        "fontsize": 7,
+                        "fontweight": "bold"
+                    }
+                )
+
+
+                ax.axis("equal")
+                st.markdown('<div class="chart-fixed">', unsafe_allow_html=True)
+                st.pyplot(fig, transparent=True, use_container_width=False)
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            else:
+                st.info("조회 조건에 해당하는 이슈가 없습니다.")
 
         st.metric("조회 결과", len(filtered_df))
 
@@ -321,8 +372,8 @@ if menu == "이슈 조회":
                 st.success("수정 내용이 저장되었습니다.")
                 st.rerun()
 
-            with col_delete:
-                selected_rows = edited_df[edited_df["선택"] == True]
+        with col_delete:
+            selected_rows = edited_df[edited_df["선택"] == True]
 
             if st.button("선택한 이슈 삭제"):
                 if selected_rows.empty:
@@ -330,49 +381,54 @@ if menu == "이슈 조회":
                 else:
                     st.session_state["delete_confirm"] = True
 
-            if st.session_state.get("delete_confirm", False):
-                st.warning("정말 선택한 이슈를 삭제하시겠습니까? 삭제 후에는 되돌릴 수 없습니다.")
+        if st.session_state.get("delete_confirm", False):
+            st.warning("정말 선택한 이슈를 삭제하시겠습니까? 삭제 후에는 되돌릴 수 없습니다.")
 
-                confirm_col, cancel_col = st.columns(2)
+            confirm_col, cancel_col = st.columns(2)
 
-                with confirm_col:
-                    if st.button("예, 삭제합니다"):
-                        for _, row in selected_rows.iterrows():
-                            delete_issue(row["ID"])
+            with confirm_col:
+                if st.button("예, 삭제합니다"):
+                    for _, row in selected_rows.iterrows():
+                        delete_issue(row["ID"])
 
-                        st.session_state["delete_confirm"] = False
-                        st.success("선택한 이슈가 삭제되었습니다.")
-                        st.rerun()
+                    st.session_state["delete_confirm"] = False
+                    st.success("선택한 이슈가 삭제되었습니다.")
+                    st.rerun()
 
-                with cancel_col:
-                    if st.button("취소"):
-                        st.session_state["delete_confirm"] = False
-                        st.info("삭제를 취소했습니다.")
-                        st.rerun()
+            with cancel_col:
+                if st.button("취소"):
+                    st.session_state["delete_confirm"] = False
+                    st.info("삭제를 취소했습니다.")
+                    st.rerun()
 
-        
-            excel_df = filtered_df.rename(columns={
-                "date": "Date",
-                "panel_id": "Panel ID",
-                "ic": "IC",
-                "model": "Model",
-                "build": "FW Version",
-                "test_item": "Test Item",
-                "fail_type": "Fail Type",
-                "issue_detail": "Issue Detail"
-            })
-            
-            excel_df.drop(columns=["id"], inplace=True, errors="ignore")
-            excel_df.insert(0, "No", range(1, len(excel_df) + 1))
-            
-            excel_data = to_excel(excel_df)
-            
-            st.download_button(
-                "전체 이슈 Excel 다운로드",
-                excel_data,
-                file_name=f"Issue_Report_{date.today()}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+        excel_df = filtered_df.rename(columns={
+            "date": "Date",
+            "panel_id": "Panel ID",
+            "ic": "IC",
+            "model": "Model",
+            "build": "FW Version",
+            "test_item": "Test Item",
+            "fail_type": "Fail Type",
+            "issue_detail": "Issue Detail"
+        })
+
+        excel_df.drop(columns=["id"], inplace=True, errors="ignore")
+        excel_df.insert(0, "No", range(1, len(excel_df) + 1))
+
+        excel_data = to_excel(excel_df)
+
+        st.download_button(
+            "전체 이슈 Excel 다운로드",
+            excel_data,
+            file_name=f"Issue_Report_{date.today()}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
     else:
-        st.caption("조회 조건을 입력한 뒤 [조회] 버튼을 눌러주세요.")
+        with right_col:
+            graph_left, graph_center, graph_right = st.columns([1, 2, 1])
+            with graph_center:
+                st.caption("조회 조건을 입력한 뒤 [조회] 버튼을 누르면 그래프가 표시됩니다.")
+
+        
+    
