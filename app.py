@@ -200,7 +200,7 @@ if menu == "이슈 조회":
     with col5:
         test_item_search = st.selectbox(
             "Test Item",
-            ["전체", "Drawing", "Jitter", "Ghost", "Line Broken", "Palm", "Edge", "Multi", "WHLK", "CS", "ODM", "ETC"]
+            ["전체", "Drawing", "Palm", "Edge", "Multi", "WHLK", "CS", "ODM", "ETC"]
         )
 
     fail_filter = st.multiselect(
