@@ -347,13 +347,28 @@ if menu == "이슈 조회":
                         st.info("삭제를 취소했습니다.")
                         st.rerun()
 
-        excel_data = to_excel(filtered_df)
-
+        
+         excel_df = filtered_df.rename(columns={
+            "date": "Date",
+            "panel_id": "Panel ID",
+            "ic": "IC",
+            "model": "Model",
+            "build": "FW Version",
+            "test_item": "Test Item",
+            "fail_type": "Fail Type",
+            "issue_detail": "Issue Detail"
+        })
+        
+        excel_df.drop(columns=["id"], inplace=True, errors="ignore")
+        excel_df.insert(0, "No", range(1, len(excel_df) + 1))
+        
+        excel_data = to_excel(excel_df)
+        
         st.download_button(
-        "전체 이슈 Excel 다운로드",
-        excel_data,
-        file_name=f"Issue_Report_{date.today()}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            "전체 이슈 Excel 다운로드",
+            excel_data,
+            file_name=f"Issue_Report_{date.today()}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
     else:
