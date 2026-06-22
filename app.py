@@ -165,15 +165,15 @@ if menu == "이슈 등록":
         height=150
     )
 
-        submitted = st.form_submit_button("이슈 등록")
+    submitted = st.button("이슈 등록")
 
-        if submitted:
-            if not panel_id or not build or not fail_type_list:
-                st.warning("Panel ID / FW Version / Fail Type은 필수 입력 항목입니다.")
-            else:
-                fail_type = ", ".join(fail_type_list)
-                insert_issue(panel_id, ic, model, build, test_item, fail_type, issue_detail)
-                st.success("이슈 등록이 완료되었습니다.")
+    if submitted:
+        if not panel_id or not build or not fail_type:
+            st.warning("Panel ID / FW Version / Fail Type은 필수 입력 항목입니다.")
+        else:
+            fail_type = ", ".join(fail_type)
+            insert_issue(panel_id, ic, model, build, test_item, fail_type, issue_detail)
+            st.success("이슈 등록이 완료되었습니다.")
 
 
 if menu == "이슈 조회":
