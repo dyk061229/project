@@ -133,37 +133,37 @@ menu = st.radio(
 if menu == "이슈 등록":
     st.subheader("이슈 등록")
         
-        col1, col2, col3 = st.columns([1,1,1])
-        
-        with col1:
-            panel_id = st.text_input("Panel ID / Code *")
-        
-        with col2:
-            ic = st.text_input("IC")
-        
-        with col3:
-            model = st.text_input("Model")
-        
-        col4, col5 = st.columns([1,1])
-        
-        with col4:
-            build = st.text_input("FW Version *")
-        
-        with col5:
-            test_item = st.selectbox(
-                "Test Item",
-                ["Drawing", "Ghost", "Jitter", "Palm", "Line Broken"]
-            )
-        
-        fail_type = st.multiselect(
-            "Fail Type *",
-            FAIL_TYPES
+    col1, col2, col3 = st.columns([1,1,1])
+    
+    with col1:
+        panel_id = st.text_input("Panel ID / Code *")
+    
+    with col2:
+        ic = st.text_input("IC")
+    
+    with col3:
+        model = st.text_input("Model")
+    
+    col4, col5 = st.columns([1,1])
+    
+    with col4:
+        build = st.text_input("FW Version *")
+    
+    with col5:
+        test_item = st.selectbox(
+            "Test Item",
+            ["Drawing", "Ghost", "Jitter", "Palm", "Line Broken"]
         )
-        
-        issue_detail = st.text_area(
-            "상세 이슈 내용",
-            height=150
-        )
+    
+    fail_type = st.multiselect(
+        "Fail Type *",
+        FAIL_TYPES
+    )
+    
+    issue_detail = st.text_area(
+        "상세 이슈 내용",
+        height=150
+    )
 
         submitted = st.form_submit_button("이슈 등록")
 
