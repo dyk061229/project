@@ -318,8 +318,7 @@ if menu == "이슈 조회":
                     wedgeprops={"width": 0.42, "edgecolor": "#111827", "linewidth": 2},
                     textprops={
                         "color": "white",
-                        "fontsize": 6.5,
-                        "fontweight": "bold"
+                        "fontsize": 6.5
                     }
                 )
 
