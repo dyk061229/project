@@ -4,7 +4,21 @@ import pandas as pd
 from datetime import date
 from io import BytesIO
 import matplotlib.pyplot as plt
-plt.rcParams["font.family"] = "Malgun Gothic"
+import matplotlib.font_manager as fm
+import os
+
+font_candidates = [
+    "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "C:/Windows/Fonts/malgun.ttf",
+]
+
+for font_path in font_candidates:
+    if os.path.exists(font_path):
+        fm.fontManager.addfont(font_path)
+        plt.rcParams["font.family"] = fm.FontProperties(fname=font_path).get_name()
+        break
+
 plt.rcParams["axes.unicode_minus"] = False
 
 st.set_page_config(
