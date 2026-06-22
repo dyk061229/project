@@ -6,6 +6,7 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import os
+import matplotlib.patheffects as pe
 
 font_candidates = [
     "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
@@ -308,20 +309,39 @@ if menu == "이슈 조회":
 
                 colors = ["#8dd3c7", "#bebada", "#b3de69", "#fb8072", "#fdb462"]
 
-                ax.pie(
-                    fail_counts,
-                    labels=fail_counts.index,
-                    autopct="%1.1f%%",
-                    startangle=90,
-                    pctdistance=0.75,
-                    colors=colors,
-                    wedgeprops={"width": 0.42, "edgecolor": "#111827", "linewidth": 2},
-                    textprops={
-                        "color": "white",
-                        "fontsize": 6.5
-                    }
-                )
+                wedges, texts, autotexts = ax.pie(
+                            fail_counts,
+                            labels=fail_counts.index,
+                            autopct="%1.1f%%",
+                            startangle=90,
+                            pctdistance=0.75,
+                            colors=colors,
+                            wedgeprops={
+                                "width": 0.38,
+                                "edgecolor": "none",
+                                "linewidth": 0
+                            },
+                            textprops={
+                                "color": "white",
+                                "fontsize": 6.5
+                            }
+                        )                       
+                for text in texts:
+                    text.set_color("white")     # 바깥 글씨
 
+                for text in texts:
+                    text.set_path_effects([
+                        pe.Stroke(linewidth=1, foreground="black"),
+                        pe.Normal()
+                    ])
+
+                for autotext in autotexts:
+                    autotext.set_color("white")
+                    autotext.set_fontweight("bold")
+                    autotext.set_path_effects([
+                        pe.Stroke(linewidth=1, foreground="black"),
+                        pe.Normal()
+                    ]) 
 
                 ax.axis("equal")
                 st.markdown('<div class="chart-fixed">', unsafe_allow_html=True)
