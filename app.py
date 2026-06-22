@@ -132,40 +132,37 @@ menu = st.radio(
 
 if menu == "이슈 등록":
     st.subheader("이슈 등록")
-
-    with st.form("issue_register_form", clear_on_submit=True):
-        col1, col2, col3 = st.columns(3)
-
+        
+        col1, col2, col3 = st.columns([1,1,1])
+        
         with col1:
             panel_id = st.text_input("Panel ID / Code *")
-
+        
         with col2:
             ic = st.text_input("IC")
-
+        
         with col3:
             model = st.text_input("Model")
-
-        col4, col5 = st.columns(2)
-
+        
+        col4, col5 = st.columns([1,1])
+        
         with col4:
             build = st.text_input("FW Version *")
-
+        
         with col5:
             test_item = st.selectbox(
                 "Test Item",
-                ["Drawing", "Jitter", "Ghost", "Line Broken", "Palm", "Edge", "Multi", "WHLK", "CS", "ODM", "ETC"]
+                ["Drawing", "Ghost", "Jitter", "Palm", "Line Broken"]
             )
-
-        fail_type_list = st.multiselect(
+        
+        fail_type = st.multiselect(
             "Fail Type *",
-            FAIL_TYPES,
-            placeholder="Fail Type을 선택해주세요. 중복 선택 가능"
+            FAIL_TYPES
         )
-
+        
         issue_detail = st.text_area(
             "상세 이슈 내용",
-            placeholder="예: 특정 구간에서 Line broken 발생 / 비교 FW 대비 Jitter 증가 / 재현 조건 등",
-            height=160
+            height=150
         )
 
         submitted = st.form_submit_button("이슈 등록")
