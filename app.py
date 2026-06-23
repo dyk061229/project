@@ -41,6 +41,11 @@ h3 {
 }
 
 .block-container {
+    width: 1800px !important;
+    min-width: 1800px !important;
+    max-width: 1800px !important;
+    margin-left: 2rem !important;
+    margin-right: auto !important;
     padding-top: 1.5rem;
     padding-bottom: 1rem;
 }
@@ -66,8 +71,9 @@ div[data-testid="stWidgetLabel"] p {
 }
             
 .chart-fixed {
-    width: 460px;
-    max-width: 460px;
+    width: 420px !important;
+    min-width: 420px !important;
+    max-width: 420px !important;
 }
 
 div[data-testid="stForm"] {
@@ -279,7 +285,7 @@ if menu == "이슈 조회":
     if not df.empty:
         df["fail_type"] = df["fail_type"].apply(normalize_fail_type_text)
 
-    left_col, right_col = st.columns([1, 0.8])
+    left_col, right_col = st.columns([7, 5], gap="large")
 
     with left_col:
         panel_search = st.text_input("Panel ID / Code", max_chars=50)
@@ -341,6 +347,7 @@ if menu == "이슈 조회":
             ]
 
         with right_col:
+
             st.markdown("### 🏆 Fail Type 분포")
 
             if not filtered_df.empty:
@@ -411,7 +418,7 @@ if menu == "이슈 조회":
                 ax.axis("equal")
                 st.markdown('<div class="chart-fixed">', unsafe_allow_html=True)
                 st.pyplot(fig, transparent=True, use_container_width=False)
-                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
             else:
                 st.info("조회 조건에 해당하는 이슈가 없습니다.")
@@ -438,7 +445,8 @@ if menu == "이슈 조회":
 
         edited_df = st.data_editor(
             editable_df,
-            use_container_width=True,
+            use_container_width=False,
+            width=1800,
             hide_index=True,
             num_rows="fixed",
             disabled=["ID", "No", "Date"],
@@ -459,7 +467,7 @@ if menu == "이슈 조회":
             key="issue_editor"
         )
 
-        col_save, col_delete = st.columns(2)
+        col_save, col_delete, col_blank = st.columns([1.2, 1.6, 7])
 
         with col_save:
             if st.button("수정 내용 저장"):
