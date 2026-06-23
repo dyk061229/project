@@ -175,19 +175,45 @@ def insert_issue(panel_id, ic, model, build, test_item, fail_type, issue_detail)
     conn.commit()
     conn.close()
 
+def is_duplicate_issue(panel_id, build, test_item, fail_type, issue_detail):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT COUNT(*)
+        FROM issues
+        WHERE panel_id = ?
+          AND build = ?
+          AND test_item = ?
+          AND fail_type = ?
+          AND issue_detail = ?
+    """, (
+        panel_id,
+        build,
+        test_item,
+        fail_type,
+        issue_detail
+    ))
+
+    count = cur.fetchone()[0]
+    conn.close()
+
+    return count > 0
+
 def load_issues():
     conn = get_connection()
     df = pd.read_sql_query("SELECT * FROM issues ORDER BY id DESC", conn)
     conn.close()
     return df
 
-def update_issue(issue_id, panel_id, ic, model, build, test_item, fail_type, issue_detail):
+def update_issue(issue_id, issue_date, panel_id, ic, model, build, test_item, fail_type, issue_detail):
     conn = get_connection()
     cur = conn.cursor()
 
     cur.execute("""
         UPDATE issues
-        SET panel_id = ?,
+        SET date = ?,
+            panel_id = ?,
             ic = ?,
             model = ?,
             build = ?,
@@ -196,6 +222,7 @@ def update_issue(issue_id, panel_id, ic, model, build, test_item, fail_type, iss
             issue_detail = ?
         WHERE id = ?
     """, (
+        issue_date,
         panel_id,
         ic,
         model,
@@ -272,9 +299,31 @@ if menu == "이슈 등록":
             if not panel_id or not build or not fail_type_list:
                 st.warning("Panel ID / FW Version / Fail Type은 필수 입력 항목입니다.")
             else:
-                fail_type = ", ".join(fail_type_list)
-                insert_issue(panel_id, ic, model, build, test_item, fail_type, issue_detail)
-                st.success("이슈 등록이 완료되었습니다.")
+                panel_id = panel_id.strip()
+                build = build.strip()
+                issue_detail = issue_detail.strip()
+
+                fail_type = ", ".join(sorted(fail_type_list))
+
+                if is_duplicate_issue(
+                    panel_id,
+                    build,
+                    test_item,
+                    fail_type,
+                    issue_detail
+                ):
+                    st.warning("동일한 이슈가 이미 등록되어 있습니다.")
+                else:
+                    insert_issue(
+                        panel_id,
+                        ic,
+                        model,
+                        build,
+                        test_item,
+                        fail_type,
+                        issue_detail
+                    )
+                    st.success("이슈 등록이 완료되었습니다.")
 
 
 if menu == "이슈 조회":
@@ -351,10 +400,6 @@ if menu == "이슈 조회":
             st.markdown("### 🏆 Fail Type 분포")
 
             if not filtered_df.empty:
-                graph_df = filtered_df.copy()
-                graph_df = graph_df[
-                    ~graph_df["fail_type"].str.contains("참고사항", case=False, na=False)
-                ]
 
                 fail_counts = (
                     filtered_df["fail_type"]
@@ -372,8 +417,7 @@ if menu == "이슈 조회":
                 )
                 if fail_counts.empty:
                     st.info("그래프에 표시할 Fail Type이 없습니다.")
-                else: 
-                
+                else:
                     fig, ax = plt.subplots(figsize=(2.3, 2.3))
                     fig.patch.set_alpha(0)
                     ax.set_facecolor("none")
@@ -382,43 +426,42 @@ if menu == "이슈 조회":
                     colors = [cmap(i % cmap.N) for i in range(len(fail_counts))]
 
                     wedges, texts, autotexts = ax.pie(
-                                fail_counts,
-                                labels=fail_counts.index,
-                                autopct="%1.1f%%",
-                                startangle=90,
-                                pctdistance=0.75,
-                                colors=colors,
-                                wedgeprops={
-                                    "width": 0.38,
-                                    "edgecolor": "none",
-                                    "linewidth": 0
-                                },
-                                textprops={
-                                    "color": "white",
-                                    "fontsize": 6.5
-                                }
-                            )                       
-                for text in texts:
-                    text.set_color("white")     # 바깥 글씨
+                        fail_counts,
+                        labels=fail_counts.index,
+                        autopct="%1.1f%%",
+                        startangle=90,
+                        pctdistance=0.75,
+                        colors=colors,
+                        wedgeprops={
+                            "width": 0.38,
+                            "edgecolor": "none",
+                            "linewidth": 0
+                        },
+                        textprops={
+                            "color": "white",
+                            "fontsize": 6.5
+                        }
+                    )
 
-                for text in texts:
-                    text.set_path_effects([
-                        pe.Stroke(linewidth=1, foreground="black"),
-                        pe.Normal()
-                    ])
+                    for text in texts:
+                        text.set_color("white")
+                        text.set_path_effects([
+                            pe.Stroke(linewidth=1, foreground="black"),
+                            pe.Normal()
+                        ])
 
-                for autotext in autotexts:
-                    autotext.set_color("white")
-                    autotext.set_fontweight("bold")
-                    autotext.set_path_effects([
-                        pe.Stroke(linewidth=1, foreground="black"),
-                        pe.Normal()
-                    ]) 
+                    for autotext in autotexts:
+                        autotext.set_color("white")
+                        autotext.set_fontweight("bold")
+                        autotext.set_path_effects([
+                            pe.Stroke(linewidth=1, foreground="black"),
+                            pe.Normal()
+                        ])
 
-                ax.axis("equal")
-                st.markdown('<div class="chart-fixed">', unsafe_allow_html=True)
-                st.pyplot(fig, transparent=True, use_container_width=False)
-                st.markdown("</div>", unsafe_allow_html=True)
+                    ax.axis("equal")
+                    st.markdown('<div class="chart-fixed">', unsafe_allow_html=True)
+                    st.pyplot(fig, transparent=True, use_container_width=False)
+                    st.markdown("</div>", unsafe_allow_html=True)
 
             else:
                 st.info("조회 조건에 해당하는 이슈가 없습니다.")
@@ -449,7 +492,7 @@ if menu == "이슈 조회":
             width=1800,
             hide_index=True,
             num_rows="fixed",
-            disabled=["ID", "No", "Date"],
+            disabled=["ID", "No", "IC", "Test Item", "Fail Type"],
             column_config={ 
                 "ID": None,
                 "선택": st.column_config.CheckboxColumn("선택", width=45),
@@ -476,6 +519,7 @@ if menu == "이슈 조회":
                 for _, row in save_df.iterrows():
                     update_issue(
                         row["ID"],
+                        row["Date"],
                         row["Panel ID"],
                         "" if pd.isna(row["IC"]) else row["IC"],
                         "" if pd.isna(row["Model"]) else row["Model"],
