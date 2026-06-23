@@ -85,6 +85,8 @@ div[data-testid="stSelectbox"] {
 div[data-testid="stMultiSelect"] {
     max-width: 700px;
 }
+         
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -111,6 +113,8 @@ FAIL_TYPE_RENAME_MAP = {
     "터치 미인식": "No Touch",
     "기타": "ETC"
 }
+
+
 
 def normalize_fail_type_text(text):
     if pd.isna(text):
@@ -427,13 +431,7 @@ if menu == "이슈 조회":
         })
 
         display_df.insert(0, "No", range(1, len(display_df) + 1))
-
-        display_df["Issue Preview"] = (
-            display_df["Issue Detail"]
-            .astype(str)
-            .str.slice(0, 30)
-            + "..."
-        )
+ 
 
         editable_df = display_df.copy()
         editable_df.insert(0, "선택", False)
@@ -444,20 +442,20 @@ if menu == "이슈 조회":
             hide_index=True,
             num_rows="fixed",
             disabled=["ID", "No", "Date"],
-            column_config={
+            column_config={ 
                 "ID": None,
-                "선택": st.column_config.CheckboxColumn("선택", width="small"),
-                "No": st.column_config.NumberColumn("No", width="small"),
-                "Date": st.column_config.TextColumn("Date", width="small"),
-                "Panel ID": st.column_config.TextColumn("Panel ID", width="small"),
-                "IC": st.column_config.TextColumn("IC", width="small"),
-                "Model": st.column_config.TextColumn("Model", width="small"),
-                "FW Version": st.column_config.TextColumn("FW Version", width="small"),
-                "Test Item": st.column_config.TextColumn("Test Item", width="small"),
-                "Fail Type": st.column_config.TextColumn("Fail Type", width="medium"),
-                "Issue Detail": None,
-                "Issue Preview": st.column_config.TextColumn("Issue Detail", width="large"),
-            },
+                "선택": st.column_config.CheckboxColumn("선택", width=45),
+                "No": st.column_config.NumberColumn("No", width=45),
+                "Date": st.column_config.TextColumn("Date", width=90),
+                "Panel ID": st.column_config.TextColumn("Panel ID", width=110),
+                "IC": st.column_config.TextColumn("IC", width=80),
+                "Model": st.column_config.TextColumn("Model", width=90),
+                "FW Version": st.column_config.TextColumn("FW Version", width=110),
+                "Test Item": st.column_config.TextColumn("Test Item", width=90),
+                "Fail Type": st.column_config.TextColumn("Fail Type", width=170),
+                "Issue Detail": st.column_config.TextColumn("Issue Detail", width=700),
+                },
+
             key="issue_editor"
         )
 
