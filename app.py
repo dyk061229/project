@@ -337,7 +337,7 @@ if menu == "이슈 조회":
             ]
 
         with right_col:
-            st.markdown("### 🏆 Fail Type 순위 TOP 5")
+            st.markdown("### 🏆 Fail Type 분포")
 
             if not filtered_df.empty:
                 graph_df = filtered_df.copy()
@@ -358,7 +358,6 @@ if menu == "이슈 조회":
                 fail_counts = (
                     fail_counts
                     .value_counts()
-                    .head(5)
                 )
                 if fail_counts.empty:
                     st.info("그래프에 표시할 Fail Type이 없습니다.")
@@ -368,7 +367,8 @@ if menu == "이슈 조회":
                     fig.patch.set_alpha(0)
                     ax.set_facecolor("none")
 
-                    colors = ["#8dd3c7", "#bebada", "#b3de69", "#fb8072", "#fdb462"]
+                    cmap = plt.get_cmap("Set3")
+                    colors = [cmap(i % cmap.N) for i in range(len(fail_counts))]
 
                     wedges, texts, autotexts = ax.pie(
                                 fail_counts,
