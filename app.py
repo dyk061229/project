@@ -30,6 +30,31 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+
+.block-container {
+    padding-top: 1.5rem;
+    padding-bottom: 1rem;
+}
+
+h1 {
+    margin-top: 0rem;
+    margin-bottom: 0.5rem;
+}
+
+h2, h3 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+div[data-testid="stCaptionContainer"] {
+    margin-bottom: 0.5rem;
+}
+            
+div[data-testid="stWidgetLabel"] p {
+    font-size: 24px !important;
+    font-weight: 900 !important;
+    color: white !important;
+}
             
 .chart-fixed {
     width: 460px;
@@ -61,8 +86,8 @@ FAIL_TYPES = [
     "Jitter",
     "Line broken",
     "Linecross",
-    "터치 미인식",
-    "기타",
+    "No Touch",
+    "ETC",
     "참고사항"
 ]
 
@@ -72,6 +97,20 @@ IC_LIST = [
     "C4500",
     "T1590A"
 ]
+
+FAIL_TYPE_RENAME_MAP = {
+    "터치 미인식": "No Touch",
+    "기타": "ETC"
+}
+
+def normalize_fail_type_text(text):
+    if pd.isna(text):
+        return text
+
+    text = str(text)
+    for kor, eng in FAIL_TYPE_RENAME_MAP.items():
+        text = text.replace(kor, eng)
+    return text
 
 def get_connection():
     return sqlite3.connect(DB_NAME, check_same_thread=False)
@@ -223,6 +262,9 @@ if menu == "이슈 조회":
 
     df = load_issues()
 
+    if not df.empty:
+        df["fail_type"] = df["fail_type"].apply(normalize_fail_type_text)
+
     left_col, right_col = st.columns([1, 0.8])
 
     with left_col:
@@ -288,44 +330,53 @@ if menu == "이슈 조회":
             st.markdown("### 🏆 Fail Type 순위 TOP 5")
 
             if not filtered_df.empty:
+                graph_df = filtered_df.copy()
+                graph_df = graph_df[
+                    ~graph_df["fail_type"].str.contains("참고사항", case=False, na=False)
+                ]
+
                 fail_counts = (
                     filtered_df["fail_type"]
                     .str.split(", ")
                     .explode()
+                )
+
+                fail_counts = fail_counts[
+                    fail_counts != "참고사항"
+                ]
+
+                fail_counts = (
+                    fail_counts
                     .value_counts()
                     .head(5)
                 )
-                fail_counts.index = fail_counts.index.map(
-                    lambda x: {
-                        "터치 미인식": "No Touch",
-                        "기타": "ETC",
-                        "참고사항": "Remark"
-                    }.get(x, x)
-                )
+                if fail_counts.empty:
+                    st.info("그래프에 표시할 Fail Type이 없습니다.")
+                else: 
                 
-                fig, ax = plt.subplots(figsize=(2.3, 2.3))
-                fig.patch.set_alpha(0)
-                ax.set_facecolor("none")
+                    fig, ax = plt.subplots(figsize=(2.3, 2.3))
+                    fig.patch.set_alpha(0)
+                    ax.set_facecolor("none")
 
-                colors = ["#8dd3c7", "#bebada", "#b3de69", "#fb8072", "#fdb462"]
+                    colors = ["#8dd3c7", "#bebada", "#b3de69", "#fb8072", "#fdb462"]
 
-                wedges, texts, autotexts = ax.pie(
-                            fail_counts,
-                            labels=fail_counts.index,
-                            autopct="%1.1f%%",
-                            startangle=90,
-                            pctdistance=0.75,
-                            colors=colors,
-                            wedgeprops={
-                                "width": 0.38,
-                                "edgecolor": "none",
-                                "linewidth": 0
-                            },
-                            textprops={
-                                "color": "white",
-                                "fontsize": 6.5
-                            }
-                        )                       
+                    wedges, texts, autotexts = ax.pie(
+                                fail_counts,
+                                labels=fail_counts.index,
+                                autopct="%1.1f%%",
+                                startangle=90,
+                                pctdistance=0.75,
+                                colors=colors,
+                                wedgeprops={
+                                    "width": 0.38,
+                                    "edgecolor": "none",
+                                    "linewidth": 0
+                                },
+                                textprops={
+                                    "color": "white",
+                                    "fontsize": 6.5
+                                }
+                            )                       
                 for text in texts:
                     text.set_color("white")     # 바깥 글씨
 
@@ -385,8 +436,17 @@ if menu == "이슈 조회":
             disabled=["ID", "No", "Date"],
             column_config={
                 "ID": None,
+                "선택": st.column_config.CheckboxColumn("선택", width="small"),
+                "No": st.column_config.NumberColumn("No", width="small"),
+                "Date": st.column_config.TextColumn("Date", width="small"),
+                "Panel ID": st.column_config.TextColumn("Panel ID", width="small"),
+                "IC": st.column_config.TextColumn("IC", width="small"),
+                "Model": st.column_config.TextColumn("Model", width="small"),
+                "FW Version": st.column_config.TextColumn("FW Version", width="small"),
+                "Test Item": st.column_config.TextColumn("Test Item", width="small"),
+                "Fail Type": st.column_config.TextColumn("Fail Type", width="medium"),
                 "Issue Detail": None,
-                "Issue Preview": st.column_config.TextColumn("Issue Detail", width="large")
+                "Issue Preview": st.column_config.TextColumn("Issue Detail", width="large"),
             },
             key="issue_editor"
         )
