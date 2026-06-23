@@ -31,6 +31,15 @@ st.set_page_config(
 st.markdown("""
 <style>
 
+div[role="radiogroup"] {
+    margin-bottom: 0rem !important;
+}
+
+h3 {
+    margin-top: 0rem !important;
+    padding-top: 0rem !important;
+}
+
 .block-container {
     padding-top: 1.5rem;
     padding-bottom: 1rem;
@@ -39,8 +48,8 @@ st.markdown("""
 h1 {
     margin-top: 0rem;
     margin-bottom: 0.5rem;
+    font-size: 2.2rem !important;
 }
-
 h2, h3 {
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
@@ -212,6 +221,7 @@ def to_excel(df):
 create_table()
 
 st.title("📋 SQA Issue Management System")
+    
 st.caption("Panel ID / FW Version 기반 테스트 이력 및 Fail Issue 등록·조회 시스템")
 
 menu = st.radio(
@@ -221,7 +231,7 @@ menu = st.radio(
 )
 
 if menu == "이슈 등록":
-    st.subheader("이슈 등록")
+    st.markdown("### 이슈 등록")
 
     with st.form("issue_register_form", clear_on_submit=True):
         panel_id = st.text_input("Panel ID / Code *", max_chars=50)
@@ -258,7 +268,7 @@ if menu == "이슈 등록":
 
 
 if menu == "이슈 조회":
-    st.subheader("이슈 조회")
+    st.markdown("### 이슈 조회")
 
     df = load_issues()
 
