@@ -418,7 +418,7 @@ if menu == "이슈 조회":
                 if fail_counts.empty:
                     st.info("그래프에 표시할 Fail Type이 없습니다.")
                 else:
-                    fig, ax = plt.subplots(figsize=(2.3, 2.3))
+                    fig, ax = plt.subplots(figsize=(3, 3))
                     fig.patch.set_alpha(0)
                     ax.set_facecolor("none")
 
